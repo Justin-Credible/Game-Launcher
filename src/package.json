@@ -1,0 +1,10 @@
+{
+	"name": "Game Launcher",
+	"main": "resources/menu.html",
+	"window": {
+		"toolbar": false,
+		"position": "center",
+		"frame": false,
+		"fullscreen": true
+	}
+}

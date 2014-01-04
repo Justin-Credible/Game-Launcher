@@ -1,0 +1,114 @@
+<?xml version="1.0"?>
+<project name="Game-Launcher" default="build" basedir=".">
+	<description>
+		This is the build script for the Game Launcher project.
+		Game Launcher depends on node-webkit as its runtime framework and
+		Reveal.js as its UI framework. The build target will download these
+		two frameworks and extract and set them up in the bin directory along
+		with the source code for game launcher (from the src directory).
+	</description>
+
+	<!-- The platform to build for; currently only win32 is supported. -->
+	<property name="platform" value="win32" overwrite="false" />
+
+	<!-- The version number of this source package. -->
+	<property name="version" value="1.0.0" overwrite="false" />
+
+	<!-- URL to the node-webit runtime binary package. -->
+	<property name="node-webkit-url-win32" overwrite="true"
+		value="https://s3.amazonaws.com/node-webkit/v0.7.3/node-webkit-v0.7.3-win-ia32.zip" />
+
+	<!-- URL to the reveal.js framework. -->
+	<property name="reveal-js-url" overwrite="true"
+		value="https://github.com/hakimel/reveal.js/archive/2.5.0.zip" />
+
+	<!-- URL to the jQuery framework. -->
+	<property name="jquery-url" overwrite="true"
+		value="http://code.jquery.com/jquery-2.0.3.min.js" />
+
+	<target name="clean" description="Removes the generated bin and tmp directories.">
+		<delete dir="tmp" if="${directory::exists('tmp')}"/>
+		<delete dir="bin" if="${directory::exists('bin')}"/>
+	</target>
+
+	<target name="cleanBin" description="Removes the generated bin and tmp directories.">
+		<delete dir="bin" if="${directory::exists('bin')}"/>
+	</target>
+
+	<target name="cleanTemp" description="Removes the generated bin and tmp directories.">
+		<delete dir="tmp" if="${directory::exists('tmp')}"/>
+	</target>
+
+	<target name="build" description="Downloads and sets up project depenencies and copies source code to the bin directory.">
+
+		<!-- Create the temp directory for holding external dependency source/packages etc. -->
+		<mkdir dir="tmp"/>
+
+		<!-- If we don't have node-webkit yet, go fetch it. -->
+		<if test="${not file::exists('tmp/node-webkit-src.zip')}">
+			<get src="${node-webkit-url-win32}" dest="tmp/node-webkit-src.zip"/>
+		</if>
+
+		<!-- If we don't have reveal.js yet, go fetch it. -->
+		<if test="${not file::exists('tmp/reveal-js-src.zip')}">
+			<get src="${reveal-js-url}" dest="tmp/reveal-js-src.zip"/>
+		</if>
+
+		<!-- If we don't have jquery yet, go fetch it. -->
+		<if test="${not file::exists('tmp/jquery-2.0.3.min.js')}">
+			<get src="${jquery-url}" dest="tmp/jquery-2.0.3.min.js"/>
+		</if>
+
+		<!-- If the bin directory doesn't exist yet, then create it and setup the external dependencies. -->
+		<if test="${not directory::exists('bin')}">
+
+			<!-- Create the directory structure. -->
+			<mkdir dir="bin"/>
+			<mkdir dir="bin/game-images"/>
+			<mkdir dir="bin/resources"/>
+			<mkdir dir="bin/resources/js"/>
+			<mkdir dir="bin/resources/css"/>
+			<mkdir dir="bin/resources/lib"/>
+			<mkdir dir="bin/resources/plugin"/>
+
+			<!-- Setup node-webkit. -->
+			<unzip zipfile="tmp/node-webkit-src.zip" todir="bin"/>
+			<delete file="bin/credits.html" failonerror="false"/>
+			<delete file="bin/nwsnapshot.exe" failonerror="false"/>
+			<move file="bin/nw.exe" tofile="bin/game-launcher.exe"/>
+
+			<!-- Setup reveal.js. -->
+			<unzip zipfile="tmp/reveal-js-src.zip" todir="tmp/reveal-js-src"/>
+			<copy todir="bin/resources">
+				<fileset basedir="tmp/reveal-js-src/reveal.js-2.5.0">
+					<include name="js/**/*"/>
+					<include name="css/**/*"/>
+					<include name="lib/**/*"/>
+					<include name="plugin/**/*"/>
+				</fileset>
+			</copy>
+
+			<!-- Setup jQuery. -->
+			<copy file="tmp/jquery-2.0.3.min.js" todir="bin/resources/js"/>
+
+			<!-- Copy the sample game images. -->
+			<copy todir="bin/game-images">
+				<fileset basedir="samples/game-images">
+					<include name="*"/>
+				</fileset>
+			</copy>
+		</if>
+
+		<!-- Copy in the Game Launcher source files. -->
+		<copy file="src/game-launcher.js" todir="bin/resources/js"/>
+		<copy file="src/game-launcher.css" todir="bin/resources/css"/>
+		<copy file="src/menu.html" todir="bin/resources"/>
+		<copy file="src/package.json" todir="bin"/>
+
+		<!-- Copy the configuration file only if it doesn't exist yet. -->
+		<copy file="src/configuration.js" todir="bin"
+			unless="${file::exists('bin/configuration.js')}"/>
+
+	</target>
+
+</project>
