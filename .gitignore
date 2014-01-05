@@ -1,2 +1,22 @@
+
+# The output of the build
 bin/
+
+# Staging area for the build process
 tmp/
+
+# Output of the packaging process
+dist/
+
+# Windows thumbnail cache
+Thumbs.db
+
+# Windows folder config
+Desktop.ini
+
+# Mac OS Stuff
+.DS_Store
+
+# Misc temp files
+*.tmp
+*.bak
