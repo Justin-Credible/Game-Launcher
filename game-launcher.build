@@ -14,8 +14,15 @@
 	<!-- The platform to build for; currently only win32 is supported. -->
 	<property name="platform" value="win32" overwrite="false" />
 
+	<!-- The operating system that the build script is executing on. -->
+	<property name="operatingSystem" value="${operating-system::to-string(environment::get-operating-system())}" overwrite="true" />
+
+	<property name="buildingOnWindows" value="${string::contains(operatingSystem, 'Windows')}"/>
+
 	<!-- The version number of this source package. -->
-	<property name="version" value="1.0.0" overwrite="false" />
+	<property name="version" value="1.0.0" overwrite="true" />
+
+	<!-- ******** Properties - Application Dependencies ********************************** -->
 
 	<!-- URL to the node-webit runtime binary package. -->
 	<property name="node-webkit-url-win32" overwrite="true"
@@ -29,21 +36,37 @@
 	<property name="jquery-url" overwrite="true"
 		value="http://code.jquery.com/jquery-2.0.3.min.js" />
 
+	<!-- ******** Properties - Bulid Process Dependencies ******************************** -->
+
+	<!-- URL to Inno Setup Extractor tool. -->
+	<property name="inno-extract-url" overwrite="true"
+		value="http://constexpr.org/innoextract/files/innoextract-1.4-windows-r1.zip" />
+
+	<!-- URL to the Resource Hacker tool. -->
+	<property name="resource-hacker-url" overwrite="true"
+		value="http://www.angusj.com/resourcehacker/reshack_setup.exe" />
+
 	<!-- ******** Target: clean ********************************************************** -->
 
 	<target name="clean" description="Removes the generated bin and tmp directories."
-		depends="cleanTemp,cleanBin">
+		depends="cleanTemp,cleanBin,cleanDist">
+	</target>
+
+	<!-- ******** Target: cleanDist ****************************************************** -->
+
+	<target name="cleanDist" description="Removes the generated dist directory.">
+		<delete dir="dist" if="${directory::exists('dist')}"/>
 	</target>
 
 	<!-- ******** Target: cleanBin ******************************************************* -->
 
-	<target name="cleanBin" description="Removes the generated bin and tmp directories.">
+	<target name="cleanBin" description="Removes the generated bin directory.">
 		<delete dir="bin" if="${directory::exists('bin')}"/>
 	</target>
 
 	<!-- ******** Target: cleanTemp ****************************************************** -->
 
-	<target name="cleanTemp" description="Removes the generated bin and tmp directories.">
+	<target name="cleanTemp" description="Removes the generated tmp directory.">
 		<delete dir="tmp" if="${directory::exists('tmp')}"/>
 	</target>
 
@@ -67,6 +90,21 @@
 		<!-- If we don't have jquery yet, go fetch it. -->
 		<if test="${not file::exists('tmp/jquery.min.js')}">
 			<get src="${jquery-url}" dest="tmp/jquery.min.js"/>
+		</if>
+
+		<!-- We only need these tools if we are building for the Windows platform. -->
+		<if test="${platform=='win32'}">
+
+			<!-- If we don't have Inno Setup Extract yet, go fetch it. -->
+			<if test="${not file::exists('tmp/inno-extract.zip')}">
+				<get src="${inno-extract-url}" dest="tmp/inno-extract.zip"/>
+			</if>
+
+			<!-- If we don't have Resource Hacker yet, go fetch it. -->
+			<if test="${not file::exists('tmp/resource-hacker.exe')}">
+				<get src="${resource-hacker-url}" dest="tmp/resource-hacker.exe"/>
+			</if>
+
 		</if>
 
 		<!-- If the bin directory doesn't exist yet, then create it and setup the external dependencies. -->
@@ -107,6 +145,34 @@
 					<include name="*"/>
 				</fileset>
 			</copy>
+
+			<!--
+				Modify the executable's icon; currently only supported when building for the Windows
+				platform AND we are building ON a Windows OS (since the tools are Windows-only).
+			-->
+			<if test="${platform=='win32'}">
+				<if test="${buildingOnWindows}">
+					<!-- Ensure that the resource hacker tool is extracted. -->
+					<if test="${not file::exists('tmp/resource-hacker/reshacker.exe')}">
+
+						<mkdir dir="tmp/resource-hacker"/>
+
+						<!-- First, unzip the Inno Extract tool. -->
+						<unzip zipfile="tmp/inno-extract.zip" todir="tmp/inno-extract" failonerror="false"
+							unless="${file::exists('tmp/inno-extract/innoextract-1.4-windows-r1/innoextract.exe')}"/>
+
+						<!-- Next, use the Inno Extract tool to extract the contents of the Resource Hacker installer bundle. -->
+						<exec program="tmp/inno-extract/innoextract-1.4-windows-r1/innoextract.exe" workingdir="tmp/" failonerror="false">
+							<arg line="--silent --extract --output-dir resource-hacker resource-hacker.exe"/>
+						</exec>
+					</if>
+
+					<!-- Use the resource hacker tool to inject the custom icon into the executable. -->
+					<exec program="tmp/resource-hacker/app/ResHacker.exe" workingdir="." failonerror="false">
+						<arg line="-modify &quot;bin/game-launcher.exe&quot;, &quot;bin/game-launcher.exe&quot;, &quot;src/img/icon.ico&quot;, ICONGROUP, IDR_MAINFRAME, 0"/>
+					</exec>
+				</if>
+			</if>
 		</if>
 
 		<!-- Copy in the Game Launcher source files. -->
