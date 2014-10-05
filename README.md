@@ -9,6 +9,8 @@ It is written in JavaScript and HTML5 and runs on [node-webkit](https://github.c
 
 Currently it has only been tested on Windows, though it should work on Linux and Mac OS platforms as well.
 
+Screenshots and a video demonstration can be found [here](http://www.justin-credible.net/Projects/Game-Launcher).
+
 ## User Experience ##
 
 The user is launched into a full screen application and can then use the arrow keys to move left and right through a list of games. For each game a large image and the name of the game are displayed. Pressing enter (or other configured key) will cause the selected game to be launched.
