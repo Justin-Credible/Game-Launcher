@@ -9,7 +9,7 @@ It is written in JavaScript and HTML5 and runs on [node-webkit](https://github.c
 
 Currently it has only been tested on Windows, though it should work on Linux and Mac OS platforms as well.
 
-Screenshots and a video demonstration can be found [here](http://www.justin-credible.net/Projects/Game-Launcher).
+Screenshots and a video demonstration can be found [here](http://www.justin-credible.net/2015/12/30/galaxian/#frontend).
 
 ## User Experience ##
 
